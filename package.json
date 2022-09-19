@@ -1,0 +1,29 @@
+{
+  "name": "parkville",
+  "version": "1.0.0",
+  "description": "car parking space with tyre clinic and battery selling",
+  "main": "app.js",
+  "scripts": {
+    "test": "start",
+    "start": "nodemon server.js",
+    "start:prod": "SET NODE_ENV=producton nodemon server.js"
+  },
+  "author": "Rogers Musoke",
+  "license": "ISC",
+  "dependencies": {
+    "compression": "^1.7.4",
+    "cookie-parser": "^1.4.6",
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.1",
+    "express": "^4.18.1",
+    "express-mongo-sanitize": "^2.2.0",
+    "express-rate-limit": "^6.5.1",
+    "helmet": "^6.0.0",
+    "hpp": "^0.2.3",
+    "mongoose": "^6.5.0",
+    "morgan": "^1.10.0",
+    "node": "^18.7.0",
+    "path": "^0.12.7",
+    "xss-clean": "^0.1.1"
+  }
+}
