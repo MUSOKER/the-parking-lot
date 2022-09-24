@@ -14,6 +14,9 @@ const AppError = require("./utils/appError");
 const globalErrorHandler = require("./controllers/errorController"); //Comes from error controller
 const { status, json } = require("express/lib/response");
 
+const userRouter = require("./routes/userRoutes"); //importing the userRoutes module
+const customerRouter = require("./routes/customerRoutes"); //importing the userRoutes module
+
 const app = express();
 
 //cors
@@ -32,6 +35,9 @@ app.set("views", path.join(__dirname, "views"));
 //GLOBAL MIDDLEWARES
 //Accessing statics files
 app.use(express.static(path.join(__dirname, "public")));
+
+//for reading JSON data
+app.use(express.json());
 
 //secure HTTP headers
 app.use(helmet());
@@ -52,14 +58,14 @@ app.use(mongoSanitize());
 app.use(xss());
 
 //Preventing parameter pollution
-app.use(
-  hpp({
-    whitelist: [
-      //list what should be contained in the search parameters eg duration, ratingsAvearge
-      "ratingsAverage",
-    ],
-  })
-);
+// app.use(
+//   hpp({
+//     whitelist: [
+//       //list what should be contained in the search parameters eg duration, ratingsAvearge
+//       "ratingsAverage",
+//     ],
+//   })
+// );
 
 //OPTIONAL: to compress the responses
 app.use(compression());
@@ -70,12 +76,15 @@ app.use((req, res, next) => {
 });
 
 //ROUTES
+app.use("/api/v1/users", userRouter); // A route with the route function
+app.use("/api/v1/customers", customerRouter);
+
 //to be used later
 // app.use("/", viewRouter);
 // app.use("/api/v1/users", userRouter);
 //for all get, post, update requests typed wrongly
-app.all("*", (req, res) => {
-  next(new AppError(`Can't find the ${req.originalUrl} on this server!`, 404));
-});
+// app.all("*", (req, res, next) => {
+//   next(new AppError(`Can't find the ${req.originalUrl} on this server!`, 404));
+// });
 app.use(globalErrorHandler);
 module.exports = app;
