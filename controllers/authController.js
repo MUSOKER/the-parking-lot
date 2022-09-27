@@ -69,3 +69,18 @@ exports.signup = catchAsync(async (req, res, next) => {
   }
   // createSendToken(newUser, 201, res) not used because the tooken is sent through the url
 });
+
+exports.login = catchAsync(async (req, res, next) => {
+  const { email, password } = req.body;
+  if (!email || !password)
+    return next(new AppError("Please provide your email and password"));
+  const user = await User.findOne({ email: email }).select("+password");
+
+  if (!user || !(await user.correctPassword(password, user.password))) {
+    return next(new AppError("Incorrect email or password", 401));
+  }
+  // if (user.isVerified === false)
+  //   return next(new AppError("Please verify your account and try again", 403));
+  createSendToken(user, 201, res);
+  next();
+});

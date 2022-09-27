@@ -55,13 +55,17 @@ const customerSchema = new mongoose.Schema({
     required: [true, "Please the driver must contain the NIN number"],
   },
   typeOfRide: {
-    type: mongoose.Schema.ObjectId,
-    ref: "Ride",
-    require: [true, "Enter the type of ride"],
+    type: String,
+    required: [true, "indicate the type of ride"],
+    enum: {
+      values: ["truck", "personal car", "taxis", "coaster", "boda-boda"],
+      message:
+        "typeOfRide is either: truck, personal car, taxis, coaster or boda-boda",
+    },
   },
   carModel: {
-    type: mongoose.Schema.ObjectId,
-    ref: "Ride",
+    type: String,
+    required: [true, "Car must have a model"],
   },
   Date: {
     type: Date,
@@ -80,22 +84,58 @@ const customerSchema = new mongoose.Schema({
     required: [true, "Customer's phone number required"],
   },
   parkingTimes: {
-    type: mongoose.Schema.ObjectId,
-    ref: "Parking",
-    default: null,
-    required: [true, "Provide the parking time, either day or night"],
+    type: String,
+    default: "Below 3 hours",
+    enum: {
+      values: ["night", "day", "Below 3 hours"],
+      message: "Time is either day or night",
+    },
   },
   parkCharge: {
-    type: mongoose.Schema.ObjectId,
-    ref: "Parking",
-  },
-  ProvidedNumber: {
+    // type: mongoose.Schema.ObjectId,
+    // ref: "Parking",
     type: Number,
-    unique: true,
-    required: [true, "Provide the issued unique number given to the customer"],
+    default: function () {
+      let result;
+      if (this.typeOfRide === "truck" && this.parkingTimes === "day") {
+        result = 5000;
+      } else if (this.typeOfRide === "truck" && this.parkingTimes === "night") {
+        result = 10000;
+      } else if (
+        (this.typeOfRide === "personal car" && this.parkingTimes === "day") ||
+        (this.typeOfRide === "taxis" && this.parkingTimes === "day")
+      ) {
+        result = 3000;
+      } else if (
+        (this.typeOfRide === "personal car" && this.parkingTimes === "night") ||
+        (this.typeOfRide === "taxis" && this.parkingTimes === "night") ||
+        (this.typeOfRide === "coaster" && this.parkingTimes === "night") ||
+        (this.typeOfRide === "boda-boda" && this.parkingTimes === "night")
+      ) {
+        result = 2000;
+      } else if (this.typeOfRide === "coaster" && this.parkingTimes === "day") {
+        result = 4000;
+      } else if (
+        this.typeOfRide === "boda-boda" &&
+        this.parkingTimes === "day"
+      ) {
+        result = 2000;
+      } else {
+        result = 1000;
+      } //for every ride parking below 3 hrs pays 1000
+      return result;
+    },
   },
+  providedNumber: {
+    type: Number,
+    default: Math.floor(Math.random() * 100 + 1),
+  },
+  // {
+  //   type: String,
+  //   required: [true, "Provide the issued unique number given to the customer"],
+  // },
   receiptNo: {
-    type: Number,
+    type: String,
     required: [true, "Provide the receipt number"],
   },
   //OTHER SERVICES
@@ -118,17 +158,17 @@ const customerSchema = new mongoose.Schema({
   },
 });
 
-customerSchema.pre("/^find/", function (next) {
+customerSchema.pre(/^find/, function (next) {
   this.populate({
-    path: "carModel typeOfRide parkingTimes created_by parkCharge",
-    select: "model rideType parkingTime firstName parkingCharge",
+    path: "created_by",
+    select: "firstName",
   });
   next();
 });
 
 customerSchema.pre(/^find/, function (next) {
   // this points to the current query
-  this.find({ isSignedOff: { $ne: false } });
+  this.find({ isSignedOff: { $ne: true } });
   next();
 });
 const Customer = mongoose.model("Customer", customerSchema);

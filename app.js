@@ -38,6 +38,7 @@ app.use(express.static(path.join(__dirname, "public")));
 
 //for reading JSON data
 app.use(express.json());
+app.use(express.urlencoded({ extended: true, limit: "45mb" }));
 
 //secure HTTP headers
 app.use(helmet());
@@ -83,8 +84,8 @@ app.use("/api/v1/customers", customerRouter);
 // app.use("/", viewRouter);
 // app.use("/api/v1/users", userRouter);
 //for all get, post, update requests typed wrongly
-// app.all("*", (req, res, next) => {
-//   next(new AppError(`Can't find the ${req.originalUrl} on this server!`, 404));
-// });
+app.all("*", (req, res, next) => {
+  next(new AppError(`Can't find the ${req.originalUrl} on this server!`, 404));
+});
 app.use(globalErrorHandler);
 module.exports = app;

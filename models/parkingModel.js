@@ -7,11 +7,11 @@ const parkingSchema = new mongoose.Schema({
     ref: "Ride",
   },
   parkingTime: {
-    type: String,
-    enum: {
-      values: ["night", "day"],
-      message: "Time is either day or night",
-    },
+    // type: String,
+    // enum: {
+    //   values: ["night", "day"],
+    //   message: "Time is either day or night",
+    // },
   },
   // releaseDate: {
   //   type: Date,
@@ -23,44 +23,44 @@ const parkingSchema = new mongoose.Schema({
   //   }
   // }
   parkingCharge: {
-    type: Number,
-    default: function () {
-      let result;
-      if (this.typeOfRide === "truck" && this.parkingTime === "day") {
-        result = 5000;
-      } else if (this.typeOfRide === "truck" && this.parkingTime === "night") {
-        result = 10000;
-      } else if (
-        this.typeOfRide === "personal car" ||
-        ("taxis" && this.parkingTime === "day")
-      ) {
-        result = 3000;
-      } else if (
-        this.typeOfRide === "personal car" ||
-        "taxis" ||
-        "coaster" ||
-        ("boda-boda" && this.parkingTime === "night")
-      ) {
-        result = 2000;
-      } else if (
-        this.typeOfRide === "coaster" &&
-        this.parkingTime === "night"
-      ) {
-        result = 4000;
-      } else if (
-        this.typeOfRide === "boda-boda" &&
-        this.parkingTime === "day"
-      ) {
-        result = 2000;
-      } else {
-        result = 1000;
-      } //for every ride parking below 3 hrs pays 1000
-      return result;
-    },
+    // type: Number,
+    // default: function () {
+    //   let result;
+    //   if (this.typeOfRide === "truck" && this.parkingTime === "day") {
+    //     result = 5000;
+    //   } else if (this.typeOfRide === "truck" && this.parkingTime === "night") {
+    //     result = 10000;
+    //   } else if (
+    //     this.typeOfRide === "personal car" ||
+    //     ("taxis" && this.parkingTime === "day")
+    //   ) {
+    //     result = 3000;
+    //   } else if (
+    //     this.typeOfRide === "personal car" ||
+    //     "taxis" ||
+    //     "coaster" ||
+    //     ("boda-boda" && this.parkingTime === "night")
+    //   ) {
+    //     result = 2000;
+    //   } else if (
+    //     this.typeOfRide === "coaster" &&
+    //     this.parkingTime === "night"
+    //   ) {
+    //     result = 4000;
+    //   } else if (
+    //     this.typeOfRide === "boda-boda" &&
+    //     this.parkingTime === "day"
+    //   ) {
+    //     result = 2000;
+    //   } else {
+    //     result = 1000;
+    //   } //for every ride parking below 3 hrs pays 1000
+    //   return result;
+    // },
   },
 });
 
-parkingSchema.pre("/^find/", function (next) {
+parkingSchema.pre(/^find/, function (next) {
   this.populate({
     path: "typeOfRide",
     select: "rideType",
