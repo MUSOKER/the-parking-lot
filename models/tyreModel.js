@@ -1,23 +1,51 @@
 const mongoose = require("mongoose");
+const Customer = require("./customerModel");
 
 const tyreSchema = new mongoose.Schema({
   //Car prices are pre entered in the system
   tyreSize: {
-    type: Number,
-    required: [true, "The tyre must contain a size"],
+    type: String,
   },
   tyreMake: {
     type: String,
-    required: [true, "Please incude the tyre make"],
   },
-  carModel: {
+  model: {
     type: String,
-    required: [true, "The car must contain its model"],
   },
-  tyreMakeCharge: {
-    enum: [500, 5000, 5000], // pressure, punture fixing, valve
-    required: [true, "the tyre charge should be entered"],
+  tyrePrice: {
+    type: Number,
   },
+  tyreService: {
+    type: String,
+    enum: ["tyre pressure", "puncture fixing", "valves"],
+    message: "Service is either tyre pressure, puncture fixing or valves",
+  },
+  Date: {
+    type: Date,
+    default: Date.now(),
+  },
+  tyreServiceCharge: {
+    type: Number,
+    default: function () {
+      let result;
+      if (this.tyreService === "tyre pressure") result = 500;
+      else if (this.tyreService === "puncture fixing") result = 5000;
+      else result = 5000;
+      return result;
+    },
+  },
+  customer: {
+    type: mongoose.Schema.ObjectId,
+    ref: "Customer",
+  },
+});
+
+tyreSchema.pre(/^find/, function (next) {
+  this.populate({
+    path: "customer",
+    select: "firstName",
+  });
+  next();
 });
 
 const Tyre = mongoose.model("Tyre", tyreSchema);

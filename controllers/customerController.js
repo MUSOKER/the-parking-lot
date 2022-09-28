@@ -45,3 +45,108 @@ exports.getAllCustomers = catchAsync(async (req, res, next) => {
     customers,
   });
 });
+
+exports.dailyParkingSales = async (req, res) => {
+  try {
+    const daily = await Customer.aggregate([
+      {
+        $match: {
+          Date: {
+            $gte: new Date("2022-01-01T17:10:29.609+00:00"),
+            $lt: new Date("2030-01-01T17:10:29.609+00:00"),
+          },
+        }, //from 2022 to 2030
+      },
+      // Second Stage
+      {
+        $group: {
+          _id: { $dateToString: { format: "%Y-%m-%d", date: "$Date" } },
+          totalParkingSales: { $sum: "$parkCharge" },
+          //  averageQuantity: { $avg: "$quantity" },
+          count: { $sum: 1 },
+        },
+      },
+      {
+        $addFields: {
+          date: "$_id",
+          NumberOfCustomers: "$count",
+          totalSalesInParking: "$totalParkingSales",
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          count: 0,
+          totalParkingSales: 0,
+        },
+      },
+      {
+        $sort: { date: 1 },
+      },
+    ]);
+    res.status(200).json({
+      status: "success",
+      data: daily,
+    });
+  } catch (err) {
+    res.status(404).json({
+      status: "fail",
+      message: err,
+    });
+  }
+};
+exports.noDailyCustomers = async (req, res) => {
+  try {
+    const noCustomers = await Customer.aggregate([
+      {
+        $match: {
+          Date: {
+            $gte: new Date("2022-01-01T17:10:29.609+00:00"),
+            $lt: new Date("2030-01-01T17:10:29.609+00:00"),
+          },
+        }, //from 2022 to 2030
+      },
+      // Second Stage
+      {
+        $group: {
+          _id: { $dateToString: { format: "%Y-%m-%d", date: "$Date" } },
+          count: { $sum: 1 },
+        },
+      },
+      {
+        $addFields: {
+          date: "$_id",
+          NumberOfCustomers: "$count",
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          count: 0,
+        },
+      },
+      {
+        $sort: { date: 1 },
+      },
+    ]);
+    res.status(200).json({
+      status: "success",
+      data: noCustomers,
+    });
+  } catch (err) {
+    res.status(404).json({
+      status: "fail",
+      message: err,
+    });
+  }
+};
+
+//Signed off custmers of all the the time
+exports.signedOff=catchAsync(async(req,res,next)=>{
+  const signedOff=Customer.find({ isSignedOff: { $ne: false } });
+  if(!signedOff) return next(new AppError('No signed off custmers',404))
+  res.status(200).json({
+    status:'success',
+    data:signedOff
+  })
+})

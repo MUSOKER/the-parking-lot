@@ -16,6 +16,7 @@ const { status, json } = require("express/lib/response");
 
 const userRouter = require("./routes/userRoutes"); //importing the userRoutes module
 const customerRouter = require("./routes/customerRoutes"); //importing the userRoutes module
+const tyreRouter = require("./routes/tyreRoutes"); //importing the userRoutes module
 
 const app = express();
 
@@ -79,6 +80,7 @@ app.use((req, res, next) => {
 //ROUTES
 app.use("/api/v1/users", userRouter); // A route with the route function
 app.use("/api/v1/customers", customerRouter);
+app.use("/api/v1/tyre", tyreRouter);
 
 //to be used later
 // app.use("/", viewRouter);
