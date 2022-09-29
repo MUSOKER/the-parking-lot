@@ -19,7 +19,7 @@ module.exports = class Email {
     });
     (this.to = recipient.email),
       (this.firstName = recipient.firstName),
-      (this.from = "admin@rog.com"), //This could still be defined in the configenv
+      (this.from = `Rogers Musoke <${process.env.EMAIL_FROM}>`), //This could still be defined in the configenv
       (this.subject = subject),
       (this.text = text_message);
   }
@@ -55,6 +55,25 @@ module.exports = class Email {
       subject: this.subject,
     });
     await this.send(html, "Welcome to Roger property");
+  }
+  async sendUpdates() {
+    console.log("new things have been added to our service");
+    const html = pug.renderFile(`${__dirname}/../views/welcome.pug`, {
+      firstName: this.firstName,
+      subject: this.subject,
+    });
+    await this.send(
+      html,
+      "There has been an increase in the number of our workers to ease your quick service. thank you"
+    );
+  }
+  async notifySales() {
+    console.log("we have gotten a  customer");
+    const html = pug.renderFile(`${__dirname}/../views/welcome.pug`, {
+      firstName: this.firstName,
+      subject: this.subject,
+    });
+    await this.send(html, "We have received a customer");
   }
   async sendPasswordReset(url) {
     const html = pug.renderFile(`${__dirname}/../views/passwordReset.pug`, {

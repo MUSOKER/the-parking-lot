@@ -55,7 +55,6 @@ const signOffSchema = new mongoose.Schema({
     },
     required: [true, "Please the driver must contain the NIN number"],
   },
-  date: Date.now(),
 });
 
 const signOff = mongoose.model("SignOff", signOffSchema);

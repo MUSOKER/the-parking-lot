@@ -31,11 +31,14 @@ const createSendToken = (user, statusCode, res) => {
     },
   });
 };
+
+//The  user will be completely signed up after verifying
 exports.signup = catchAsync(async (req, res, next) => {
   console.log("dealing with sign ups");
   console.log(req.body);
+
   const newUser = await User.create(
-    // req.body
+    //req.body
     {
       firstName: req.body.firstName,
       lastName: req.body.lastName,
@@ -50,7 +53,7 @@ exports.signup = catchAsync(async (req, res, next) => {
   try {
     const verifyurl = `${req.protocol}://${req.get(
       "host"
-    )}/verify-account/${verifyToken}`;
+    )}/verifyAccount/${verifyToken}`;
     const subject = "Verify Account";
     const message = "Confirm its your account";
     await new Email(newUser, subject, message).sendVerifyAccount(verifyurl);
@@ -67,7 +70,36 @@ exports.signup = catchAsync(async (req, res, next) => {
       new AppError("There was an error sending the email. Try again later", 500)
     );
   }
+  // user.isVerified === false  //When user clicks the verify button he will be automatically verified
   // createSendToken(newUser, 201, res) not used because the tooken is sent through the url
+});
+
+//to verify the user
+exports.verifyAccount = catchAsync(async (req, res, next) => {
+  const token = req.params.token;
+  console.log(`the token is ${token}`);
+  const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
+
+  const user = await User.findOne({
+    verifyAccountToken: hashedToken,
+    verifyAccountTokenExpires: { $gt: Date.now() },
+  }).select("+isVerified");
+  console.log("my user", user);
+  if (!user) {
+    return next(new AppError("Token is invalid or has expired", 400));
+  }
+  user.isVerified = true; //Sets the isVerified to true
+  user.verifyAccountToken = undefined;
+  user.verifyAccountTokenExpires = undefined;
+  await user.save();
+  await new Email(
+    user,
+    "welcome",
+    "Lets work together",
+    "Thank you"
+  ).sendWelcome();
+
+  createSendToken(user, 200, res);
 });
 
 exports.login = catchAsync(async (req, res, next) => {
@@ -75,12 +107,74 @@ exports.login = catchAsync(async (req, res, next) => {
   if (!email || !password)
     return next(new AppError("Please provide your email and password"));
   const user = await User.findOne({ email: email }).select("+password");
+  //+isVerified will be selected when in production
 
   if (!user || !(await user.correctPassword(password, user.password))) {
     return next(new AppError("Incorrect email or password", 401));
   }
   // if (user.isVerified === false)
   //   return next(new AppError("Please verify your account and try again", 403));
-  createSendToken(user, 201, res);
+  createSendToken(user, 201, res); // logs in the user
   next();
 });
+
+exports.logout = (req, res) => {
+  res.cookie("jwt", "loggedout", {
+    expires: new Date(Date.now() + 10 * 1000),
+    httpOnly: true,
+  });
+  res.status(200).json({
+    status: "success",
+  });
+};
+
+exports.protect = catchAsync(async (req, res, next) => {
+  // 1.getting the token
+  let token;
+  if (
+    req.headers.authorization &&
+    req.headers.authorization.startsWith("Bearer")
+  ) {
+    token = req.headers.authorization.split(" ")[1];
+  }
+  //token sent through cookie
+  else if (req.cookies.jwt) {
+    token = req.cookies.jwt;
+  }
+  if (!token) {
+    next(
+      new AppError("You are not logged in! Please log in to get access", 401)
+    );
+  }
+  //2. Verification of the token
+  const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
+  // 3. check if the user still exist
+  const currentUser = await User.findById(decoded.id);
+  if (!currentUser) {
+    return next(
+      new AppError("The user belonging to this token does nolonger exist", 401)
+    );
+  }
+  //4. Check if user changed password after token was issued
+  if (currentUser.changedPasswordAfter(decoded.iat)) {
+    return next(
+      new AppError("User recently changed password! Please log in again", 401)
+    );
+  }
+  //GRANT ACCESS TO PROTECTED ROUTES
+  req.user = currentUser;
+  res.locals.user = currentUser; //getting access to the user in the pug template
+  next();
+});
+
+exports.restrictTo = (...roles) => {
+  return (req, res, next) => {
+    //req.user is the current user
+    if (!roles.includes(req.user.roles)) {
+      return next(
+        new AppError("You do not have permission to perform this action", 403)
+      );
+    }
+  };
+  next();
+};

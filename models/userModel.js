@@ -86,6 +86,8 @@ const userSchema = new mongoose.Schema(
     passwordChangedAt: Date,
     passwordResetToken: String, //These be in the database
     passwordResetExpires: Date,
+    verifyAccountToken: String,
+    verifyAccountTokenExpires: Date,
     active: {
       type: Boolean,
       default: true, //Hidding this property from the user

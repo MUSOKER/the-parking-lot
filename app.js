@@ -14,9 +14,10 @@ const AppError = require("./utils/appError");
 const globalErrorHandler = require("./controllers/errorController"); //Comes from error controller
 const { status, json } = require("express/lib/response");
 
-const userRouter = require("./routes/userRoutes"); //importing the userRoutes module
-const customerRouter = require("./routes/customerRoutes"); //importing the userRoutes module
-const tyreRouter = require("./routes/tyreRoutes"); //importing the userRoutes module
+const userRouter = require("./routes/userRoutes"); 
+const customerRouter = require("./routes/customerRoutes"); 
+const tyreRouter = require("./routes/tyreRoutes"); 
+const batteryRouter = require("./routes/batteryRoutes"); 
 
 const app = express();
 
@@ -81,6 +82,7 @@ app.use((req, res, next) => {
 app.use("/api/v1/users", userRouter); // A route with the route function
 app.use("/api/v1/customers", customerRouter);
 app.use("/api/v1/tyre", tyreRouter);
+app.use("/api/v1/battery", batteryRouter);
 
 //to be used later
 // app.use("/", viewRouter);
