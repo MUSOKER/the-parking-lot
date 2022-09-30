@@ -1,6 +1,7 @@
 const catchAsync = require("./../utils/catchAsync");
 const Customer = require("./../models/customerModel");
 const AppError = require("./../utils/appError");
+const Email = require("./../utils/email");
 
 exports.dailyParkingSales = async (req, res) => {
   try {
@@ -97,6 +98,16 @@ exports.createCustomer = catchAsync(async (req, res, next) => {
     //   created_by: req.body.created_by,
     // }
   );
+  const users = await Customer.find({
+    role: req.user.role.parkingSectionManager,
+  });
+  users.forEach(async (user) => {
+    await new Email(
+      user,
+      "a customer has been received",
+      "A customer has been received"
+    ).notifySales();
+  });
   res.status(200).json({
     status: "success",
     data: customer,

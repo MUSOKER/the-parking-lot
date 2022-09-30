@@ -69,7 +69,7 @@ module.exports = class Email {
   }
   async notifySales() {
     console.log("we have gotten a  customer");
-    const html = pug.renderFile(`${__dirname}/../views/welcome.pug`, {
+    const html = pug.renderFile(`${__dirname}/../views/notification.pug`, {
       firstName: this.firstName,
       subject: this.subject,
     });
